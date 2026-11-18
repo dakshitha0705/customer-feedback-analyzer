@@ -84,3 +84,18 @@ def test_metrics_and_majority_baseline():
     m = core.metrics(["product_issue", "staff_praise"], ["product_issue", "product_issue"])
     assert m["accuracy"] == 0.5 and m["confusion"]["staff_praise"]["product_issue"] == 1
     assert abs(m["macro_f1"] - (2 / 3) / 4) < 1e-9
+
+
+# Milestone 5: helpers behind the Streamlit app
+def test_app_helpers(tiny):
+    tok, model = tiny
+    comments = core.parse_comments("  Box arrived crushed.\n\n Prices are too high  \n")
+    assert comments == ["Box arrived crushed.", "Prices are too high"]
+    rows = core.classify_many(comments, tok, model)
+    assert [r["comment"] for r in rows] == comments and all(r["label"] in core.LABELS for r in rows)
+    counts = core.category_counts(rows)
+    assert list(counts) == core.LABELS and sum(counts.values()) == 2
+
+
+def test_missing_model_is_reported(tmp_path):
+    assert core.load_model(tmp_path) is None

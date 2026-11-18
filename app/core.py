@@ -220,3 +220,29 @@ def evaluate() -> dict:
     print("\n".join(lines[2:6]))
     return {"model": model_m, "baseline": base_m}
 
+
+
+# --- Milestone 5: Build a simple Streamlit app to input comments and show classifications.
+def parse_comments(text: str) -> list[str]:
+    """One comment per non-empty line."""
+    return [line.strip() for line in text.splitlines() if line.strip()]
+
+
+def classify_many(comments: list[str], tokenizer=None, model=None) -> list[dict]:
+    """Rows for the app table: comment, label, confidence."""
+    out = []
+    for comment in comments:
+        r = classify(comment, tokenizer, model)
+        out.append({"comment": comment, "label": r["label"], "confidence": round(r["confidence"], 3)})
+    return out
+
+
+def category_counts(rows: list[dict]) -> dict[str, int]:
+    """How many comments landed in each category (all 4 present, zero if none)."""
+    counts = Counter(r["label"] for r in rows)
+    return {label: counts.get(label, 0) for label in LABELS}
+
+
+if __name__ == "__main__":
+    command = sys.argv[1] if len(sys.argv) > 1 else "train"
+    {"train": train, "eval": evaluate}[command]()

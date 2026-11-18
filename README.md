@@ -2,51 +2,36 @@
 
 [![Built with askThili](https://ask.thili.ai/api/v1/public/projects/q4mxjuh77r/badge.svg)](https://ask.thili.ai/b/q4mxjuh77r)
 
-This Customer Feedback Analyzer helps retail managers quickly identify trends and prioritize improvements by automatically categorizing customer feedback comments. It leverages a fine-tuned GPT-2 model to classify comments into predefined categories like "product issue" or "staff praise", showcasing an end-to-end inference pipeline.
+A Streamlit app that sorts customer comments into four categories with a fine-tuned **distilgpt2**:
+`product_issue`, `delivery_shipping`, `staff_praise`, `pricing_value`. Runs on CPU, with no API key and no `.env`.
 
-## What you are building
+**How it works:** each category is a new special token (`<|product_issue|>` and so on). The model is trained on
+`Comment: {text}\nCategory: <|label|>`, with loss only on the category token. To classify, it compares the next-token
+logits of those 4 tokens and returns the label with its softmax probability. The category embeddings start from the
+mean of their words' embeddings, because with identical starting points training stalled at chance (loss ln 4).
 
-**Goal.** You will build a tool that automatically categorizes customer feedback comments using a fine-tuned GPT-2 model, demonstrating the fine-tuning logic and an inference pipeline to classify new comments.
-
-**Done when.** The project is complete when you have a Streamlit application that allows a user to input customer feedback comments and displays the predicted category (e.g., "product issue", "staff praise") for each comment.
-
-## Milestones
-
-Tick these off as you go, and commit after each one.
-
-- [ ] **1. Define 3-5 feedback categories and create a small dataset of example comments with labels.**  
-      Hint: Define your categories and create a small training dataset with example comments and their corresponding labels.
-- [ ] **2. Extend GPT-2 tokenizer and model with new category tokens.**  
-      Hint: Modify the GPT-2 tokenizer and model to recognize and generate your new category tokens, similar to how special tokens were added for legal clauses.
-- [ ] **3. Fine-tune the model using the Hugging Face Trainer.**  
-      Hint: Use the Hugging Face Trainer to fine-tune your model on your custom dataset, following the pattern from the GPT-2 fine-tuning drill.
-- [ ] **4. Implement an inference function to classify new feedback.**  
-      Hint: Develop a function that takes a new customer comment and uses your fine-tuned model to predict and return its category.
-- [ ] **5. Build a simple Streamlit app to input comments and show classifications.**  
-      Hint: Build a simple web interface using Streamlit to accept user input and display the classification results from your inference function.
-
-## Run it
-
-You need Python 3.12 and git.
+## Setup and run
 
 ```bash
 python3.12 -m venv .venv && source .venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env        # then choose a model; see the comments inside
+pip install -r requirements.txt     # CPU-only torch
+python -m app.core train            # fine-tune (~2-3 min CPU) -> models/, results/train_log.json
+python -m app.core eval             # test-set metrics -> results/eval.md
 streamlit run app/main.py
-pytest
+pytest -q                           # offline: tiny random GPT-2 + word-level tokenizer
 ```
 
-Your work goes in `app/core.py` (one stub per milestone) and `tests/test_core.py`. The first tests pass already; they
-check the plumbing.
+## Results (24-comment held-out test split)
 
-## Settings and secrets
+| Model | Accuracy | Macro-F1 |
+|---|---|---|
+| Fine-tuned distilgpt2 (3 epochs, batch 4, lr 1e-4) | 0.917 | 0.919 |
+| Majority-class baseline | 0.250 | 0.100 |
 
-Model settings live in `.env`, which is ignored by git. **Never commit `.env` or paste a key into code.** If a key ever
-reaches GitHub, treat it as leaked and make a new one.
+The confusion matrix and error examples are in [results/eval.md](results/eval.md). The training log is in
+[results/train_log.json](results/train_log.json).
 
-## Stretch ideas
+## Data note
 
-- Expand the dataset with more diverse examples and additional feedback categories.
-- Implement a feature to process multiple comments at once (batch inference).
-- Add basic reporting in the Streamlit app, such as a bar chart showing the distribution of classified categories.
+[data/feedback.csv](data/feedback.csv) holds **120 synthetic comments** (30 per category) that were written for this
+demo, split 80/20 with stratification. They are short and clean, so expect lower accuracy on real customer text.
