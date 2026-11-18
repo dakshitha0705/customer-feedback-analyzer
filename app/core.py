@@ -83,8 +83,24 @@ def load_base(model_name: str = "distilgpt2"):
     model = AutoModelForCausalLM.from_pretrained(model_name)
     old = len(tokenizer)
     added = extend_tokenizer_and_model(tokenizer, model)
+    init_label_embeddings(tokenizer, model)
     print(f"vocab {old} -> {len(tokenizer)} (+{added}: {LABEL_TOKENS + [PAD_TOKEN]})")
     return tokenizer, model
+
+
+def init_label_embeddings(tokenizer, model) -> None:
+    """Start each category token at the mean embedding of its words (e.g. ' product issue').
+
+    With the default mean-init all 4 tokens start identical and training stalls at loss ln(4) (chance);
+    GPT-2 ties input and output embeddings, so this also gives each label a distinct output direction.
+    """
+    import torch
+
+    emb = model.get_input_embeddings().weight
+    with torch.no_grad():
+        for label, tid in zip(LABELS, label_token_ids(tokenizer)):
+            word_ids = tokenizer(" " + label.replace("_", " "), add_special_tokens=False)["input_ids"]
+            emb[tid] = emb[word_ids].mean(dim=0)
 
 
 # --- Milestone 3: Fine-tune the model using the Hugging Face Trainer.
@@ -97,7 +113,7 @@ def encode_example(tokenizer, text: str, label: str, max_length: int = MAX_LENGT
             "labels": [-100] * (n - 1) + [ids[-1]] + [-100] * pad}
 
 
-def train(epochs: int = 3, batch_size: int = 16, lr: float = 5e-4, seed: int = 42) -> dict:
+def train(epochs: int = 3, batch_size: int = 4, lr: float = 1e-4, seed: int = 42) -> dict:
     """Fine-tune distilgpt2 on the train split, save to models/, write results/train_log.json."""
     from transformers import Trainer, TrainingArguments, set_seed
 
@@ -123,3 +139,84 @@ def train(epochs: int = 3, batch_size: int = 16, lr: float = 5e-4, seed: int = 4
     (RESULTS_DIR / "train_log.json").write_text(json.dumps(log, indent=2))
     print(f"trained {len(losses)} steps in {seconds}s, loss {losses[0]} -> {losses[-1]}")
     return log
+
+
+# --- Milestone 4: Implement an inference function to classify new feedback.
+_LOADED: dict = {}
+
+
+def load_model(model_dir: Path | str = MODEL_DIR):
+    """(tokenizer, model) from models/, or None if not trained yet. Cached per directory."""
+    model_dir = Path(model_dir)
+    if not (model_dir / "config.json").exists():
+        return None
+    if model_dir not in _LOADED:
+        from transformers import AutoModelForCausalLM, AutoTokenizer
+
+        _LOADED[model_dir] = (AutoTokenizer.from_pretrained(model_dir),
+                              AutoModelForCausalLM.from_pretrained(model_dir).eval())
+    return _LOADED[model_dir]
+
+
+def classify(text: str, tokenizer=None, model=None) -> dict:
+    """Compare next-token logits of the 4 category tokens only -> {"label", "confidence", "probs"}."""
+    import torch
+
+    if model is None:
+        loaded = load_model()
+        if loaded is None:
+            raise FileNotFoundError("No trained model: run `python -m app.core train`")
+        tokenizer, model = loaded
+    ids = torch.tensor([prompt_ids(tokenizer, text)])
+    with torch.no_grad():
+        logits = model(input_ids=ids).logits[0, -1, label_token_ids(tokenizer)]
+    probs = torch.softmax(logits.float(), dim=-1).tolist()
+    best = max(range(len(LABELS)), key=probs.__getitem__)
+    return {"label": LABELS[best], "confidence": probs[best], "probs": dict(zip(LABELS, probs))}
+
+
+def metrics(gold: list[str], pred: list[str]) -> dict:
+    """Accuracy, macro-F1 and confusion matrix (rows = gold, columns = predicted)."""
+    confusion = {g: {p: 0 for p in LABELS} for g in LABELS}
+    for g, p in zip(gold, pred):
+        confusion[g][p] += 1
+    f1s = []
+    for label in LABELS:
+        tp = confusion[label][label]
+        fp = sum(confusion[g][label] for g in LABELS) - tp
+        fn = sum(confusion[label].values()) - tp
+        f1s.append(2 * tp / (2 * tp + fp + fn) if tp else 0.0)
+    acc = sum(g == p for g, p in zip(gold, pred)) / len(gold)
+    return {"accuracy": acc, "macro_f1": sum(f1s) / len(f1s), "confusion": confusion}
+
+
+def evaluate() -> dict:
+    """Score the fine-tuned model and a majority-class baseline on the test split; write results/eval.md."""
+    train_rows, test_rows = split_dataset(load_dataset())
+    gold = [r["label"] for r in test_rows]
+    outs = [classify(r["text"]) for r in test_rows]
+    model_m = metrics(gold, [o["label"] for o in outs])
+    majority = Counter(r["label"] for r in train_rows).most_common(1)[0][0]
+    base_m = metrics(gold, [majority] * len(gold))
+    errors = sorted([(r, o) for r, o in zip(test_rows, outs) if o["label"] != r["label"]],
+                    key=lambda x: -x[1]["confidence"])[:3]
+    lines = [f"# Evaluation (test split, n={len(gold)}, synthetic data)", "",
+             "| Model | Accuracy | Macro-F1 |", "|---|---|---|",
+             f"| Fine-tuned distilgpt2 | {model_m['accuracy']:.3f} | {model_m['macro_f1']:.3f} |",
+             f"| Majority baseline ({majority}) | {base_m['accuracy']:.3f} | {base_m['macro_f1']:.3f} |", "",
+             "## Confusion matrix (rows = true, columns = predicted)", "",
+             "| true \\ pred | " + " | ".join(LABELS) + " |", "|---" * (len(LABELS) + 1) + "|"]
+    lines += [f"| {g} | " + " | ".join(str(model_m["confusion"][g][p]) for p in LABELS) + " |" for g in LABELS]
+    lines += ["", "## Error examples", ""]
+    lines += [f"- \"{r['text']}\" — true `{r['label']}`, predicted `{o['label']}` ({o['confidence']:.2f})"
+              for r, o in errors]
+    if len(errors) < 3:
+        lines.append(f"- Only {len(errors)} test error(s); lowest-confidence correct predictions instead:")
+        hard = sorted([(r, o) for r, o in zip(test_rows, outs) if o["label"] == r["label"]],
+                      key=lambda x: x[1]["confidence"])[:3 - len(errors)]
+        lines += [f"  - \"{r['text']}\" — `{o['label']}` ({o['confidence']:.2f})" for r, o in hard]
+    RESULTS_DIR.mkdir(exist_ok=True)
+    (RESULTS_DIR / "eval.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
+    print("\n".join(lines[2:6]))
+    return {"model": model_m, "baseline": base_m}
+

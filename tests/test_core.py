@@ -67,3 +67,20 @@ def test_label_masking_keeps_only_the_category_token(tiny):
     assert ex["attention_mask"][i] == 1 and sum(ex["attention_mask"]) == i + 1
     long = core.encode_example(tok, "broke " * 200, "pricing_value")
     assert long["labels"][-1] == tok.convert_tokens_to_ids("<|pricing_value|>")
+
+
+# Milestone 4: classify always returns one of the 4 labels
+@pytest.mark.parametrize("text", ["My parcel never arrived.", "", "zzz qqq " * 100, "Great staff!"])
+def test_classify_returns_one_of_the_labels(tiny, text):
+    tok, model = tiny
+    out = core.classify(text, tok, model)
+    assert out["label"] in core.LABELS
+    assert set(out["probs"]) == set(core.LABELS)
+    assert abs(sum(out["probs"].values()) - 1) < 1e-5
+    assert out["confidence"] == max(out["probs"].values())
+
+
+def test_metrics_and_majority_baseline():
+    m = core.metrics(["product_issue", "staff_praise"], ["product_issue", "product_issue"])
+    assert m["accuracy"] == 0.5 and m["confusion"]["staff_praise"]["product_issue"] == 1
+    assert abs(m["macro_f1"] - (2 / 3) / 4) < 1e-9
