@@ -1,30 +1,42 @@
-"""Your code. One stub per milestone; build them in order and keep each one small."""
+"""Customer Feedback Analyzer: dataset, GPT-2 category tokens, fine-tuning and inference (CPU only).
+
+CLI:  python -m app.core train   |   python -m app.core eval
+"""
+from __future__ import annotations
+
+import csv
+import json
+import random
+import sys
+import time
+from collections import Counter
+from pathlib import Path
+
+ROOT = Path(__file__).resolve().parent.parent
+DATA_PATH = ROOT / "data" / "feedback.csv"
+MODEL_DIR = ROOT / "models" / "feedback-distilgpt2"
+RESULTS_DIR = ROOT / "results"
+
 
 # --- Milestone 1: Define 3-5 feedback categories and create a small dataset of example comments with labels.
-# Hint: Define your categories and create a small training dataset with example comments and their corresponding labels.
-def milestone_1():  # TODO(milestone 1)
-    raise NotImplementedError("TODO(milestone 1)")
+LABELS = ["product_issue", "delivery_shipping", "staff_praise", "pricing_value"]
 
 
-# --- Milestone 2: Extend GPT-2 tokenizer and model with new category tokens.
-# Hint: Modify the GPT-2 tokenizer and model to recognize and generate your new category tokens, similar to how special tokens were added for legal clauses.
-def milestone_2():  # TODO(milestone 2)
-    raise NotImplementedError("TODO(milestone 2)")
+def load_dataset(path: Path | str = DATA_PATH) -> list[dict]:
+    """Rows of {"text", "label"} from the (synthetic) CSV."""
+    with open(path, newline="", encoding="utf-8") as f:
+        return [{"text": r["text"].strip(), "label": r["label"].strip()} for r in csv.DictReader(f)]
 
 
-# --- Milestone 3: Fine-tune the model using the Hugging Face Trainer.
-# Hint: Use the Hugging Face Trainer to fine-tune your model on your custom dataset, following the pattern from the GPT-2 fine-tuning drill.
-def milestone_3():  # TODO(milestone 3)
-    raise NotImplementedError("TODO(milestone 3)")
-
-
-# --- Milestone 4: Implement an inference function to classify new feedback.
-# Hint: Develop a function that takes a new customer comment and uses your fine-tuned model to predict and return its category.
-def milestone_4():  # TODO(milestone 4)
-    raise NotImplementedError("TODO(milestone 4)")
-
-
-# --- Milestone 5: Build a simple Streamlit app to input comments and show classifications.
-# Hint: Build a simple web interface using Streamlit to accept user input and display the classification results from your inference function.
-def milestone_5():  # TODO(milestone 5)
-    raise NotImplementedError("TODO(milestone 5)")
+def split_dataset(rows: list[dict], test_frac: float = 0.2, seed: int = 42) -> tuple[list[dict], list[dict]]:
+    """Stratified split: the same fraction of every label goes to the test set."""
+    rng = random.Random(seed)
+    train, test = [], []
+    for label in LABELS:
+        group = [r for r in rows if r["label"] == label]
+        rng.shuffle(group)
+        n_test = round(len(group) * test_frac)
+        test += group[:n_test]
+        train += group[n_test:]
+    rng.shuffle(train)
+    return train, test

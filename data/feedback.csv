@@ -1,0 +1,121 @@
+text,label
+The blender stopped working after two days.,product_issue
+Zipper on the jacket broke the first time I used it.,product_issue
+My phone charger gets dangerously hot.,product_issue
+The screen arrived with dead pixels in the corner.,product_issue
+Shoes started falling apart after a week of light use.,product_issue
+The kettle leaks water from the bottom.,product_issue
+Bluetooth keeps disconnecting on these headphones.,product_issue
+Paint is already peeling off the chair legs.,product_issue
+The vacuum loses suction after ten minutes.,product_issue
+Coffee maker makes a loud grinding noise now.,product_issue
+One of the drawer handles snapped off.,product_issue
+The app crashes every time I open the smart lamp settings.,product_issue
+Stitching came undone on the backpack strap.,product_issue
+Battery barely holds a charge anymore.,product_issue
+The toaster only heats one side of the bread.,product_issue
+Mattress has a lump that will not go away.,product_issue
+The lid does not seal so everything spills.,product_issue
+Remote control buttons stopped responding.,product_issue
+The fabric shrank badly after one wash.,product_issue
+Watch strap cracked within a month.,product_issue
+The printer jams on every second page.,product_issue
+Instructions were missing and two screws did not fit.,product_issue
+The fridge is making a constant buzzing sound.,product_issue
+Colour faded completely after a few washes.,product_issue
+The keyboard has a sticky space bar out of the box.,product_issue
+Speaker crackles at any volume above half.,product_issue
+The pan coating is flaking into my food.,product_issue
+Tent pole bent the first time we set it up.,product_issue
+Glass bottle had a hairline crack.,product_issue
+The lamp flickers constantly and then turns off.,product_issue
+My order arrived a week later than promised.,delivery_shipping
+The package was left in the rain and soaked through.,delivery_shipping
+Tracking has not updated in five days.,delivery_shipping
+Courier said delivered but nothing was at my door.,delivery_shipping
+Box showed up crushed on one side.,delivery_shipping
+I received someone else's parcel instead of mine.,delivery_shipping
+Shipping took forever for a next day order.,delivery_shipping
+Delivery driver left a missed card while I was home.,delivery_shipping
+Half of my order is still missing.,delivery_shipping
+The parcel went to the wrong address twice.,delivery_shipping
+Paid for express shipping but it came standard.,delivery_shipping
+Delivery window kept getting pushed back.,delivery_shipping
+Items were rattling around loose in a huge box.,delivery_shipping
+Package was stuck at customs for three weeks.,delivery_shipping
+"Arrived two days early, super fast shipping!",delivery_shipping
+The courier threw the box over my fence.,delivery_shipping
+Nobody told me my order would ship in two separate boxes.,delivery_shipping
+Order still says processing after ten days.,delivery_shipping
+The driver refused to bring it up to my flat.,delivery_shipping
+Frozen items arrived completely thawed.,delivery_shipping
+My parcel was returned to sender without any delivery attempt.,delivery_shipping
+Got a delivery notification at 3am for a package that never came.,delivery_shipping
+Same day delivery turned into four days.,delivery_shipping
+Packaging was torn open when it got here.,delivery_shipping
+They shipped it to my old address even though I updated it.,delivery_shipping
+Wish I could choose a delivery time slot.,delivery_shipping
+The tracking link in the email does not work.,delivery_shipping
+"Very quick delivery, came the next morning.",delivery_shipping
+Flowers arrived wilted because the van was delayed.,delivery_shipping
+Pickup point was closed when I went to collect my order.,delivery_shipping
+Sarah at the checkout was incredibly friendly.,staff_praise
+The store manager went out of their way to help me.,staff_praise
+Big thanks to the assistant who found my size in the back.,staff_praise
+Staff were patient while I tried on ten pairs of shoes.,staff_praise
+The customer service agent sorted my issue in minutes.,staff_praise
+Loved how knowledgeable the team in electronics was.,staff_praise
+Tom gave me great advice on choosing a laptop.,staff_praise
+Everyone was so welcoming when we walked in.,staff_praise
+The cashier spotted a mistake on my receipt and fixed it kindly.,staff_praise
+Your support team on chat was brilliant.,staff_praise
+"A staff member carried my bags to the car, so kind.",staff_praise
+The pharmacist took time to explain everything clearly.,staff_praise
+Really helpful employee in the garden section.,staff_praise
+"The person at the counter remembered my name, lovely touch.",staff_praise
+Best service I have had in any shop this year.,staff_praise
+Staff were polite and cheerful even at closing time.,staff_praise
+Shoutout to Mike for helping me install the app.,staff_praise
+The team handled a busy Saturday with smiles.,staff_praise
+The waiter recommended the perfect dish.,staff_praise
+The phone rep was calm and very understanding.,staff_praise
+Employees here genuinely care about customers.,staff_praise
+Priya in returns made the process painless.,staff_praise
+The tailor gave excellent fitting advice.,staff_praise
+Very attentive staff without being pushy.,staff_praise
+The security guard helped my elderly mum find the lift.,staff_praise
+Front desk staff were amazing during check in.,staff_praise
+The barista always makes my day better.,staff_praise
+Great teamwork from the staff at the paint counter.,staff_praise
+The sales assistant was honest and did not upsell me.,staff_praise
+Huge credit to the night shift staff for their kindness.,staff_praise
+Way too expensive for what you get.,pricing_value
+"Great value for money, will buy again.",pricing_value
+Prices went up twenty percent since last month.,pricing_value
+The discount code did not apply at checkout.,pricing_value
+Cheaper on other websites for the same item.,pricing_value
+Hidden fees added at the last step of payment.,pricing_value
+Membership fee is not worth it anymore.,pricing_value
+Excellent quality for such a low price.,pricing_value
+The sale price was not honoured at the till.,pricing_value
+I was charged twice for the same item.,pricing_value
+Bundle deal saved me a lot of money.,pricing_value
+Overpriced compared to the local market.,pricing_value
+Loved the buy one get one free offer.,pricing_value
+Shelf price and receipt price did not match.,pricing_value
+Student discount makes it really affordable.,pricing_value
+Fifty dollars for a phone case is ridiculous.,pricing_value
+Loyalty points are worth almost nothing.,pricing_value
+Fair prices and frequent promotions.,pricing_value
+The premium version is not worth the extra cost.,pricing_value
+Refund was less than what I originally paid.,pricing_value
+Price matching policy is fantastic.,pricing_value
+Small portion for such a high price.,pricing_value
+Subscription renewed at a much higher rate without warning.,pricing_value
+"Affordable and good quality, hard to beat.",pricing_value
+Coupons expire too quickly to be useful.,pricing_value
+You can get the same thing for half the price elsewhere.,pricing_value
+Black Friday deals were genuinely good this year.,pricing_value
+Tax was not included in the advertised price.,pricing_value
+Paying extra for gift wrapping feels like a rip off.,pricing_value
+Reasonable pricing for a premium brand.,pricing_value
