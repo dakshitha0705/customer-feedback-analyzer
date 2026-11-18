@@ -1,0 +1,33 @@
+{
+  "base_model": "distilgpt2",
+  "train_examples": 96,
+  "epochs": 3,
+  "batch_size": 16,
+  "learning_rate": 0.0005,
+  "max_length": 64,
+  "vocab_size": 50262,
+  "steps": 18,
+  "first_loss": 14.2186,
+  "final_loss": 5.0503,
+  "train_seconds": 76.9,
+  "loss_per_step": [
+    14.2186,
+    13.0638,
+    11.8746,
+    11.1419,
+    10.5339,
+    10.0739,
+    9.6837,
+    9.2772,
+    8.8215,
+    8.2456,
+    7.8161,
+    7.3148,
+    6.514,
+    6.2346,
+    5.7289,
+    5.3435,
+    4.9369,
+    5.0503
+  ]
+}

@@ -85,3 +85,41 @@ def load_base(model_name: str = "distilgpt2"):
     added = extend_tokenizer_and_model(tokenizer, model)
     print(f"vocab {old} -> {len(tokenizer)} (+{added}: {LABEL_TOKENS + [PAD_TOKEN]})")
     return tokenizer, model
+
+
+# --- Milestone 3: Fine-tune the model using the Hugging Face Trainer.
+def encode_example(tokenizer, text: str, label: str, max_length: int = MAX_LENGTH) -> dict:
+    """Prompt + category token, right-padded. Loss only on the category token: every other label is -100."""
+    ids = prompt_ids(tokenizer, text, max_length) + [tokenizer.convert_tokens_to_ids(f"<|{label}|>")]
+    n, pad = len(ids), max_length - len(ids)
+    return {"input_ids": ids + [tokenizer.pad_token_id] * pad,
+            "attention_mask": [1] * n + [0] * pad,
+            "labels": [-100] * (n - 1) + [ids[-1]] + [-100] * pad}
+
+
+def train(epochs: int = 3, batch_size: int = 16, lr: float = 5e-4, seed: int = 42) -> dict:
+    """Fine-tune distilgpt2 on the train split, save to models/, write results/train_log.json."""
+    from transformers import Trainer, TrainingArguments, set_seed
+
+    set_seed(seed)
+    tokenizer, model = load_base()
+    train_rows, _ = split_dataset(load_dataset())
+    dataset = [encode_example(tokenizer, r["text"], r["label"]) for r in train_rows]
+    args = TrainingArguments(output_dir=str(ROOT / "models" / "trainer_tmp"), num_train_epochs=epochs,
+                             per_device_train_batch_size=batch_size, learning_rate=lr, logging_steps=1,
+                             save_strategy="no", report_to="none", use_cpu=True, seed=seed, disable_tqdm=True)
+    trainer = Trainer(model=model, args=args, train_dataset=dataset)
+    start = time.time()
+    trainer.train()
+    seconds = round(time.time() - start, 1)
+    MODEL_DIR.mkdir(parents=True, exist_ok=True)
+    trainer.save_model(str(MODEL_DIR))
+    tokenizer.save_pretrained(str(MODEL_DIR))
+    losses = [round(h["loss"], 4) for h in trainer.state.log_history if "loss" in h]
+    log = {"base_model": "distilgpt2", "train_examples": len(dataset), "epochs": epochs, "batch_size": batch_size,
+           "learning_rate": lr, "max_length": MAX_LENGTH, "vocab_size": len(tokenizer), "steps": len(losses),
+           "first_loss": losses[0], "final_loss": losses[-1], "train_seconds": seconds, "loss_per_step": losses}
+    RESULTS_DIR.mkdir(exist_ok=True)
+    (RESULTS_DIR / "train_log.json").write_text(json.dumps(log, indent=2))
+    print(f"trained {len(losses)} steps in {seconds}s, loss {losses[0]} -> {losses[-1]}")
+    return log

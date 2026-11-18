@@ -53,3 +53,17 @@ def test_category_tokens_are_single_tokens(tiny):
         assert tok.tokenize(token) == [token]
     assert tok.pad_token == core.PAD_TOKEN
     assert model.get_input_embeddings().weight.shape[0] == len(tok)
+
+
+# Milestone 3: loss only on the category token
+def test_label_masking_keeps_only_the_category_token(tiny):
+    tok, _ = tiny
+    ex = core.encode_example(tok, "The kettle leaks water from the bottom.", "product_issue")
+    assert len(ex["input_ids"]) == len(ex["labels"]) == core.MAX_LENGTH
+    kept = [(i, t) for i, t in enumerate(ex["labels"]) if t != -100]
+    assert len(kept) == 1
+    i, t = kept[0]
+    assert t == ex["input_ids"][i] == tok.convert_tokens_to_ids("<|product_issue|>")
+    assert ex["attention_mask"][i] == 1 and sum(ex["attention_mask"]) == i + 1
+    long = core.encode_example(tok, "broke " * 200, "pricing_value")
+    assert long["labels"][-1] == tok.convert_tokens_to_ids("<|pricing_value|>")
